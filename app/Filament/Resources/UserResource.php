@@ -3,15 +3,18 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\SelectColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
 {
@@ -23,14 +26,22 @@ class UserResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $roles = Role::all()->pluck('name', 'name');
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')->required(),
-                Forms\Components\TextInput::make('email')->email()->required(),
-                Forms\Components\TextInput::make('password')
+                TextInput::make('name')->required(),
+                TextInput::make('email')->email()->required(),
+                TextInput::make('password')
                     ->password()
                     ->required()
                     ->visibleOn('create'),
+                Select::make('role')
+                    ->options($roles)
+                    ->rules(['required'])
+                    ->live(),
+                TextInput::make('alamat')
+                    ->required()
+                    ->hidden(fn (Get $get): bool => $get('role') != 'karyawan'),
             ]);
     }
 
@@ -38,8 +49,8 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
-                Tables\Columns\TextColumn::make('email'),
+                TextColumn::make('name'),
+                TextColumn::make('email'),
             ])
             ->filters([
                 //
