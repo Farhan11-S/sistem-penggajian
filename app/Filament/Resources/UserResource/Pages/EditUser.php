@@ -21,7 +21,7 @@ class EditUser extends EditRecord
     protected function fillForm(): void
     {
         $user = $this->getRecord();
-        $user->load('roles');
+        $user->load(['roles', 'karyawan']);
 
         /** @internal Read the DocBlock above the following method. */
         $this->fillFormWithDataAndCallHooks($user);
@@ -53,6 +53,7 @@ class EditUser extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $data['role'] = $data['roles'][0]['name'] ?? null;
+        $data['alamat'] = $data['karyawan']['alamat'] ?? null;
         return $data;
     }
 
@@ -61,9 +62,19 @@ class EditUser extends EditRecord
      */
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
+        $alamat = null;
+        if (isset($data['alamat'])) {
+            $alamat = $data['alamat'];
+            unset($data['alamat']);
+        }
+
         $record->syncRoles([$data['role']]);
 
         $record->update($data);
+
+        if ($alamat != null) {
+            $record->karyawan()->update(['alamat' => $alamat]);
+        }
 
         return $record;
     }

@@ -17,6 +17,12 @@ class CreateUser extends CreateRecord
      */
     protected function handleRecordCreation(array $data): Model
     {
+        $alamat = null;
+        if (isset($data['alamat'])) {
+            $alamat = $data['alamat'];
+            unset($data['alamat']);
+        }
+
         $record = new ($this->getModel())($data);
 
         if (
@@ -28,6 +34,10 @@ class CreateUser extends CreateRecord
 
         $record->syncRoles([$data['role']]);
         $record->save();
+
+        if ($alamat != null) {
+            $record->karyawan()->create(['alamat' => $alamat]);
+        }
 
         return $record;
     }
