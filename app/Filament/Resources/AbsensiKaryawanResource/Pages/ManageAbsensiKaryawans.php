@@ -22,6 +22,10 @@ class ManageAbsensiKaryawans extends ManageRecords
 
     private function checkTodayAbsensi(): bool
     {
+        if (!auth()->user()->karyawan) {
+            return false;
+        }
+
         return auth()
             ->user()
             ->karyawan
