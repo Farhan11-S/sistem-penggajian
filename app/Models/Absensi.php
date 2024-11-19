@@ -17,5 +17,7 @@ class Absensi extends Model
         'karyawan_id',
         'jam_masuk',
         'jam_pulang',
+        'is_raya',
+        'created_at',
     ];
 }

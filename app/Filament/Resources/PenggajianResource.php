@@ -47,7 +47,7 @@ class PenggajianResource extends Resource
                     ->label('Absensi'),
                 TextColumn::make('total_jam_lembur')
                     ->label('Total Jam Lembur')
-                    ->formatStateUsing(fn(string $state): string => CarbonInterval::seconds($state)->cascade()->forHumans()),
+                    ->formatStateUsing(fn(string $state): string => CarbonInterval::seconds($state)->cascade()->totalHours . ' jam'),
             ])
             ->filters([
                 //
@@ -77,7 +77,7 @@ class PenggajianResource extends Resource
                             'name' => $record->user->name,
                             'alamat' => $record->alamat,
                             'jumlah_absensi' => $record->jumlah_absensi,
-                            'total_jam_lembur' => CarbonInterval::seconds($record->total_jam_lembur)->cascade()->forHumans(),
+                            'total_jam_lembur' => CarbonInterval::seconds($record->total_jam_lembur)->cascade()->totalHours . ' jam',
                         ];
                     })
                     ->disabledForm()
@@ -94,7 +94,21 @@ class PenggajianResource extends Resource
                     'absensi as total_jam_lembur' => function ($newQuery) {
                         $newQuery->whereTime('jam_pulang', '>', '17:00:00');
                     }
-                ], DB::raw('TIME_TO_SEC(TIMEDIFF(time(`jam_pulang`), "17:00:00"))'));
+                ], DB::raw(
+                    "TIME_TO_SEC(
+                        TIMEDIFF(
+                            time(`jam_pulang`), 
+                            CASE 
+                                WHEN DATEDIFF(
+                                    `created_at`, 
+                                    '20170910'
+                                ) % 7 = 0 OR is_raya = 1 
+                                THEN `jam_masuk`
+                                ELSE '17:00:00'
+                            END
+                        )
+                    )"
+                ));
 
             return $newQuery;
         });

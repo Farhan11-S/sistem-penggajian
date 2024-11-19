@@ -15,22 +15,7 @@ class ManageAbsensiKaryawans extends ManageRecords
         return [
             Actions\CreateAction::make()
                 ->createAnother(false)
-                ->disabled($this->checkTodayAbsensi())
-                ->label($this->checkTodayAbsensi() ? 'Sudah Absen' : 'Absen Masuk'),
+                ->label('Absen Masuk'),
         ];
-    }
-
-    private function checkTodayAbsensi(): bool
-    {
-        if (!auth()->user()->karyawan) {
-            return false;
-        }
-
-        return auth()
-            ->user()
-            ->karyawan
-            ->absensi()
-            ->whereDate('created_at', now())
-            ->exists();
     }
 }
