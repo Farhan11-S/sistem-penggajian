@@ -93,6 +93,7 @@ class PenggajianResource extends Resource
                 ->withSum([
                     'absensi as total_jam_lembur' => function ($newQuery) {
                         $newQuery->whereTime('jam_pulang', '>', '17:00:00');
+                        $newQuery->whereDate('created_at', '>=', now()->startOfMonth());
                     }
                 ], DB::raw(
                     "TIME_TO_SEC(
