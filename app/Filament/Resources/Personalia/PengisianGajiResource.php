@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Personalia;
 
-use App\Filament\Resources\PengisianGajiResource\Pages;
+use App\Filament\Resources\Personalia\PengisianGajiResource\Pages;
 use App\Models\GajiKaryawan;
 use App\Models\StatusGajiKaryawan;
 use Carbon\CarbonInterval;

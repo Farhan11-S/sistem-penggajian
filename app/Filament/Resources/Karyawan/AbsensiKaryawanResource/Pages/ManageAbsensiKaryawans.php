@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\AbsensiKaryawanResource\Pages;
+namespace App\Filament\Resources\Karyawan\AbsensiKaryawanResource\Pages;
 
-use App\Filament\Resources\AbsensiKaryawanResource;
+use App\Filament\Resources\Karyawan\AbsensiKaryawanResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ManageRecords;
 

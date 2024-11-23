@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Karyawan;
 
 use App\Models\Absensi;
 use Filament\Forms\Form;
@@ -9,16 +9,13 @@ use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\TimePicker;
 use Illuminate\Database\Eloquent\Builder;
-use App\Filament\Resources\AbsensiKaryawanResource\Pages;
+use App\Filament\Resources\Karyawan\AbsensiKaryawanResource\Pages;
 use Closure;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Tables\Columns\CheckboxColumn;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Query\Builder as QueryBuilder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class AbsensiKaryawanResource extends Resource
 {

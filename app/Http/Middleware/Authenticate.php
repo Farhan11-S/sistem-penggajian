@@ -29,10 +29,10 @@ class Authenticate extends Middleware
 
         $panel = Filament::getCurrentPanel();
 
-        abort_if(
-            !$user->canAccessPanel($panel),
-            403,
-        );
+        // abort_if(
+        //     !$user->canAccessPanel($panel),
+        //     403,
+        // );
     }
 
     protected function redirectTo($request): ?string

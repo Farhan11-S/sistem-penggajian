@@ -1,10 +1,9 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Admin;
 
-use App\Filament\Resources\PenggajianResource\Pages;
+use App\Filament\Resources\Admin\PenggajianResource\Pages;
 use App\Models\Karyawan;
-use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Filament\Actions\StaticAction;
 use Filament\Forms\Components\TextInput;
