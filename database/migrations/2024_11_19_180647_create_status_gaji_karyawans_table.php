@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('status_gaji_karyawan', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('gaji_karyawan_id')->constrained('gaji_karyawan')->nullable()->default(null);
-            $table->foreignId('potongan_gaji_karyawan_id')->constrained('potongan_gaji_karyawan')->nullable()->default(null);
-            $table->foreignId('karyawan_id')->constrained('karyawan')->nullable()->default(null);
+            $table->foreignId('gaji_karyawan_id')->nullable()->default(null)->constrained('gaji_karyawan');
+            $table->foreignId('potongan_gaji_karyawan_id')->nullable()->default(null)->constrained('potongan_gaji_karyawan');
+            $table->foreignId('karyawan_id')->constrained('karyawan');
             $table->boolean('is_completed')->default(false);
             $table->foreignId('created_by')->constrained('users');
             $table->timestamps();

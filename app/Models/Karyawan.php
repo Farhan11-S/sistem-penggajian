@@ -29,4 +29,15 @@ class Karyawan extends Model
     {
         return $this->hasMany(Absensi::class);
     }
+
+    public function gajiKaryawan()
+    {
+        return $this->belongsToMany(GajiKaryawan::class, 'status_gaji_karyawan', 'karyawan_id', 'gaji_karyawan_id')
+            ->withPivot('is_completed', 'created_at', 'updated_at');
+    }
+
+    public function statusGaji()
+    {
+        return $this->hasMany(StatusGajiKaryawan::class);
+    }
 }

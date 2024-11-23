@@ -62,9 +62,8 @@ class PenggajianResource extends Resource
                         TextInput::make('total_jam_lembur')
                             ->label('Total Jam Lembur'),
                     ])
-                    ->action(function (): void {
-                        // $record->author()->associate($data['authorId']);
-                        // $record->save();
+                    ->action(function ($record): void {
+                        $record->statusGaji()->create();
                     })
                     ->label(__('penggajian.modal.label'))
                     ->modalHeading(fn(): string => __('penggajian.modal.heading', ['label' => static::getRecordTitle(null)]))
@@ -109,7 +108,13 @@ class PenggajianResource extends Resource
                             END
                         )
                     )"
-                ));
+                ))
+                ->whereDoesntHave(
+                    'statusGaji',
+                    fn($q) => $q
+                        ->whereDate('created_at', '>=', now()->startOfMonth())
+                        // ->where('is_completed', 0)
+                );
 
             return $newQuery;
         });
