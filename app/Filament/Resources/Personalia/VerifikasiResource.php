@@ -2,7 +2,13 @@
 
 namespace App\Filament\Resources\Personalia;
 
-use App\Filament\Resources\Personalia\PengisianGajiResource\Pages;
+use App\Filament\Resources\Personalia\VerifikasiResource\Pages;
+use App\Models\Verifikasi;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+
 use App\Models\GajiKaryawan;
 use App\Models\StatusGajiKaryawan;
 use Carbon\CarbonInterval;
@@ -11,18 +17,14 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Split;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Forms\Get;
-use Filament\Resources\Resource;
 use Filament\Support\Facades\FilamentIcon;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Number;
 
-class PengisianGajiResource extends Resource
+class VerifikasiResource extends Resource
 {
     protected static ?string $model = GajiKaryawan::class;
 
@@ -40,7 +42,7 @@ class PengisianGajiResource extends Resource
     {
         return $table
             ->query(function () {
-                $newQuery = StatusGajiKaryawan::whereDoesntHave('gajiKaryawan')
+                $newQuery = StatusGajiKaryawan::whereHas('gajiKaryawan')
                     ->with([
                         'karyawan' => fn($query) => $query
                             ->select('id', 'user_id', 'alamat')
@@ -54,18 +56,18 @@ class PengisianGajiResource extends Resource
                                 }
                             ], DB::raw(
                                 "TIME_TO_SEC(
-                                TIMEDIFF(
-                                    time(`jam_pulang`), 
-                                    CASE 
-                                        WHEN DATEDIFF(
-                                            `created_at`, 
-                                            '20170910'
-                                        ) % 7 = 0 OR is_raya = 1 
-                                        THEN `jam_masuk`
-                                        ELSE '17:00:00'
-                                    END
-                                )
-                            )"
+                            TIMEDIFF(
+                                time(`jam_pulang`), 
+                                CASE 
+                                    WHEN DATEDIFF(
+                                        `created_at`, 
+                                        '20170910'
+                                    ) % 7 = 0 OR is_raya = 1 
+                                    THEN `jam_masuk`
+                                    ELSE '17:00:00'
+                                END
+                            )
+                        )"
                             ))
                             ->withSum([
                                 'absensi as jam_lembur_biasa' => function ($newQuery) {
@@ -74,18 +76,18 @@ class PengisianGajiResource extends Resource
                                 }
                             ], DB::raw(
                                 "TIME_TO_SEC(
-                                TIMEDIFF(
-                                    time(`jam_pulang`), 
-                                    CASE 
-                                        WHEN DATEDIFF(
-                                            `created_at`, 
-                                            '20170910'
-                                        ) % 7 = 0 OR is_raya = 1 
-                                        THEN `jam_pulang`
-                                        ELSE '17:00:00'
-                                    END
-                                )
-                            )"
+                            TIMEDIFF(
+                                time(`jam_pulang`), 
+                                CASE 
+                                    WHEN DATEDIFF(
+                                        `created_at`, 
+                                        '20170910'
+                                    ) % 7 = 0 OR is_raya = 1 
+                                    THEN `jam_pulang`
+                                    ELSE '17:00:00'
+                                END
+                            )
+                        )"
                             ))
                             ->withSum([
                                 'absensi as jam_lembur_raya' => function ($newQuery) {
@@ -95,11 +97,11 @@ class PengisianGajiResource extends Resource
                                 }
                             ], DB::raw(
                                 "TIME_TO_SEC(
-                                TIMEDIFF(
-                                    TIME(`jam_pulang`), 
-                                    TIME(`jam_masuk`)
-                                )
-                            )"
+                            TIMEDIFF(
+                                TIME(`jam_pulang`), 
+                                TIME(`jam_masuk`)
+                            )
+                        )"
                             ))
                             ->withSum([
                                 'absensi as jam_lembur_minggu' => function ($newQuery) {
@@ -108,20 +110,21 @@ class PengisianGajiResource extends Resource
                                 }
                             ], DB::raw(
                                 "TIME_TO_SEC(
-                                TIMEDIFF(
-                                    TIME(`jam_pulang`), 
-                                    CASE 
-                                        WHEN DATEDIFF(
-                                            `created_at`, 
-                                            '20170910'
-                                        ) % 7 = 0
-                                        THEN `jam_masuk`
-                                        ELSE 'jam_pulang'
-                                    END
-                                )
-                            )"
+                            TIMEDIFF(
+                                TIME(`jam_pulang`), 
+                                CASE 
+                                    WHEN DATEDIFF(
+                                        `created_at`, 
+                                        '20170910'
+                                    ) % 7 = 0
+                                    THEN `jam_masuk`
+                                    ELSE 'jam_pulang'
+                                END
+                            )
+                        )"
                             )),
                         'karyawan.user',
+                        'gajiKaryawan',
                     ]);
 
                 return $newQuery;
@@ -224,27 +227,17 @@ class PengisianGajiResource extends Resource
                                                     $get('santunan_sosial') +
                                                     ($get('uang_lembur_per_jam') * $get('data.total_jam_lembur')), 'IDR')),
                                         ])
-                                ])->columnSpanFull(),
+                                ])
+                                    ->columnSpanFull(),
                             ]),
                     ])
-                    ->action(function ($record, $data): void {
-                        $totalJamLembur = CarbonInterval::seconds($record->karyawan->total_jam_lembur)->cascade()->totalHours;
-                        $gajiKaryawanData = [
-                            ...$data,
-                            'jumlah_uang_lembur' => $data['uang_lembur_per_jam'] * $totalJamLembur,
-                            'jumlah_penerimaan' => $data['gaji_pokok'] +
-                                $data['tunjangan_pemondokan'] +
-                                $data['santunan_sosial'] +
-                                ($data['uang_lembur_per_jam'] * $totalJamLembur),
-                            'pembulatan_bulan_lalu' => 0,
-                        ];
-                        $gajiKaryawan = GajiKaryawan::create($gajiKaryawanData);
-                        $record->gajiKaryawan()->associate($gajiKaryawan);
-                        $record->save();
+                    ->action(function ($record): void {
+                        // $record->statusGaji()->create();
                     })
+                    ->disabledForm()
                     ->label(__('personalia.modal.label'))
                     ->modalHeading(fn(): string => __('personalia.modal.heading', ['label' => static::getRecordTitle(null)]))
-                    ->modalSubmitAction(fn(StaticAction $action) => $action->label(__('personalia.modal.submit')))
+                    ->modalSubmitAction(fn(StaticAction $action) => $action->label(__('personalia.modal.submit'))->hidden())
                     ->modalCancelAction(fn(StaticAction $action) => $action->label(__('filament-actions::view.single.modal.actions.close.label')))
                     ->color('gray')
                     ->icon(FilamentIcon::resolve('actions::view-action') ?? 'heroicon-m-eye')
@@ -258,7 +251,11 @@ class PengisianGajiResource extends Resource
                                 'jam_lembur_raya' => CarbonInterval::seconds($record->karyawan->jam_lembur_raya)->cascade()->totalHours,
                                 'jam_lembur_minggu' => CarbonInterval::seconds($record->karyawan->jam_lembur_minggu)->cascade()->totalHours,
                                 'total_jam_lembur' => CarbonInterval::seconds($record->karyawan->total_jam_lembur)->cascade()->totalHours,
-                            ]
+                            ],
+                            'gaji_pokok' => $record->gajiKaryawan->gaji_pokok,
+                            'tunjangan_pemondokan' => $record->gajiKaryawan->tunjangan_pemondokan,
+                            'santunan_sosial' => $record->gajiKaryawan->santunan_sosial,
+                            'uang_lembur_per_jam' => $record->gajiKaryawan->uang_lembur_per_jam,
                         ];
                     }),
             ]);
@@ -267,12 +264,12 @@ class PengisianGajiResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManagePersonalias::route('/'),
+            'index' => Pages\ManageVerifikasis::route('/'),
         ];
     }
 
     public static function getPluralModelLabel(): string
     {
-        return 'Pengisian Gaji';
+        return 'Verifikasi Personalia';
     }
 }

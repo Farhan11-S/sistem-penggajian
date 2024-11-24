@@ -21,4 +21,9 @@ class StatusGajiKaryawan extends Pivot
     {
         return $this->belongsTo(Karyawan::class);
     }
+
+    public function gajiKaryawan()
+    {
+        return $this->belongsTo(GajiKaryawan::class);
+    }
 }
