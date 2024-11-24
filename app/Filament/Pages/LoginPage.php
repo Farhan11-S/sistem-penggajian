@@ -21,6 +21,10 @@ class LoginPage extends Login
                 Filament::setCurrentPanel($panels['karyawan']);
             } else if ($user->hasRole('personalia')) {
                 Filament::setCurrentPanel($panels['personalia']);
+            } else if ($user->hasRole('pde')) {
+                Filament::setCurrentPanel($panels['pde']);
+            } else if ($user->hasRole('accountant')) {
+                Filament::setCurrentPanel($panels['accountant']);
             } else {
                 Filament::setCurrentPanel($panels['admin']);
             }
