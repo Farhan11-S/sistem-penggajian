@@ -26,7 +26,7 @@ class PengisianGajiResource extends Resource
 {
     protected static ?string $model = PotonganGajiKaryawan::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-s-inbox-arrow-down';
 
     public static function form(Form $form): Form
     {
@@ -231,9 +231,9 @@ class PengisianGajiResource extends Resource
                         $record->potonganGajiKaryawan()->associate($potonganGajiKaryawan);
                         $record->save();
                     })
-                    ->label(__('personalia.modal.label'))
-                    ->modalHeading(fn(): string => __('personalia.modal.heading', ['label' => static::getRecordTitle(null)]))
-                    ->modalSubmitAction(fn(StaticAction $action) => $action->label(__('personalia.modal.submit')))
+                    ->label(__('pde.potongan.modal.label'))
+                    ->modalHeading(fn($record): string => __('pde.potongan.modal.heading', ['label' => $record->karyawan->user->name]))
+                    ->modalSubmitAction(fn(StaticAction $action) => $action->label(__('pde.potongan.modal.submit')))
                     ->modalCancelAction(fn(StaticAction $action) => $action->label(__('filament-actions::view.single.modal.actions.close.label')))
                     ->color('gray')
                     ->icon(FilamentIcon::resolve('actions::view-action') ?? 'heroicon-m-eye')
