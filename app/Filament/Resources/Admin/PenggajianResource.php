@@ -20,7 +20,7 @@ class PenggajianResource extends Resource
 {
     protected static ?string $model = Karyawan::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-s-inbox-stack';
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -44,7 +44,7 @@ class PenggajianResource extends Resource
                 TextColumn::make('alamat'),
                 TextColumn::make('jumlah_absensi')
                     ->label('Absensi'),
-                TextColumn::make('total_jam_lembur')
+                TextColumn::make('total_jam_lembur')->placeholder(__('admin.penggajian.columns.placeholder_jam_lembur'))
                     ->label('Total Jam Lembur')
                     ->formatStateUsing(fn(string $state): string => CarbonInterval::seconds($state)->cascade()->totalHours . ' jam'),
             ])
@@ -64,9 +64,9 @@ class PenggajianResource extends Resource
                     ->action(function ($record): void {
                         $record->statusGaji()->create();
                     })
-                    ->label(__('penggajian.modal.label'))
-                    ->modalHeading(fn(): string => __('penggajian.modal.heading', ['label' => static::getRecordTitle(null)]))
-                    ->modalSubmitAction(fn(StaticAction $action) => $action->label(__('penggajian.modal.submit')))
+                    ->label(__('admin.penggajian.modal.label'))
+                    ->modalHeading(fn($record): string => __('admin.penggajian.modal.heading', ['label' => $record->user->name]))
+                    ->modalSubmitAction(fn(StaticAction $action) => $action->label(__('admin.penggajian.modal.submit')))
                     ->modalCancelAction(fn(StaticAction $action) => $action->label(__('filament-actions::view.single.modal.actions.close.label')))
                     ->color('gray')
                     ->icon(FilamentIcon::resolve('actions::view-action') ?? 'heroicon-m-eye')
@@ -112,7 +112,7 @@ class PenggajianResource extends Resource
                     'statusGaji',
                     fn($q) => $q
                         ->whereDate('created_at', '>=', now()->startOfMonth())
-                        // ->where('is_completed', 0)
+                    // ->where('is_completed', 0)
                 );
 
             return $newQuery;

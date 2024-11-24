@@ -28,7 +28,7 @@ class VerifikasiResource extends Resource
 {
     protected static ?string $model = GajiKaryawan::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-s-document-check';
 
     public static function form(Form $form): Form
     {
@@ -296,18 +296,17 @@ class VerifikasiResource extends Resource
                         // $record->statusGaji()->create();
                     })
                     ->disabledForm()
-                    ->label(__('personalia.modal.label'))
-                    ->modalHeading(fn(): string => __('personalia.modal.heading', ['label' => static::getRecordTitle(null)]))
+                    ->label(__('personalia.verifikasi.modal.label'))
+                    ->modalHeading(fn($record): string => __('personalia.verifikasi.modal.heading', ['label' => $record->karyawan->user->name]))
                     ->modalSubmitAction(function (StaticAction $action, $record) {
                         if ($record->potonganGajiKaryawan == null) {
-                            dd($record);
                             return $action->hidden(fn($record) => $record->potonganGajiKaryawan == null);
                         }
-                        return $action->label(__('personalia.modal.verify'))->color('success');
+                        return $action->label(__('personalia.verifikasi.modal.verify'))->color('success');
                     })
                     ->modalCancelAction(function (StaticAction $action, $record) {
                         if ($record->potonganGajiKaryawan != null) {
-                            return $action->label(__('personalia.modal.reject'))->color('danger');
+                            return $action->label(__('personalia.verifikasi.modal.reject'))->color('danger');
                         }
                         return $action->label(__('filament-actions::view.single.modal.actions.close.label'));
                     })
