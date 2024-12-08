@@ -15,15 +15,8 @@ class LoginResponse extends AuthLoginResponse
         $user = Filament::auth()->user();
         $panels = Filament::getPanels();
 
-        if ($user->hasRole('admin')) {
-            Filament::setCurrentPanel($panels['admin']);
-        } else if ($user->hasRole('karyawan')) {
-            Filament::setCurrentPanel($panels['karyawan']);
-        } else if ($user->hasRole('personalia')) {
-            Filament::setCurrentPanel($panels['personalia']);
-        } else {
-            Filament::setCurrentPanel($panels['admin']);
-        }
+        $role = $user->getRoleNames()[0];
+        Filament::setCurrentPanel($panels[$role]);
 
         return parent::toResponse($request);
     }

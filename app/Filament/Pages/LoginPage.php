@@ -14,20 +14,8 @@ class LoginPage extends Login
         if (Filament::auth()->check()) {
             $user = Filament::auth()->user();
             $panels = Filament::getPanels();
-
-            if ($user->hasRole('admin')) {
-                Filament::setCurrentPanel($panels['admin']);
-            } else if ($user->hasRole('karyawan')) {
-                Filament::setCurrentPanel($panels['karyawan']);
-            } else if ($user->hasRole('personalia')) {
-                Filament::setCurrentPanel($panels['personalia']);
-            } else if ($user->hasRole('pde')) {
-                Filament::setCurrentPanel($panels['pde']);
-            } else if ($user->hasRole('accountant')) {
-                Filament::setCurrentPanel($panels['accountant']);
-            } else {
-                Filament::setCurrentPanel($panels['admin']);
-            }
+            $role = $user->getRoleNames()[0];
+            Filament::setCurrentPanel($panels[$role]);
 
             redirect()->intended(Filament::getUrl());
         }
