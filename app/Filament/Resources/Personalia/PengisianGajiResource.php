@@ -41,6 +41,7 @@ class PengisianGajiResource extends Resource
         return $table
             ->query(function () {
                 $newQuery = StatusGajiKaryawan::whereDoesntHave('gajiKaryawan')
+                    ->select('*', DB::raw('MONTHNAME(created_at) as bulan'))
                     ->with([
                         'karyawan' => fn($query) => $query
                             ->select('id', 'user_id', 'alamat')
@@ -129,6 +130,8 @@ class PengisianGajiResource extends Resource
             ->columns([
                 TextColumn::make('karyawan.user.name')
                     ->label('Nama Karyawan'),
+                TextColumn::make('bulan')
+                    ->label('Bulan Gaji'),
                 TextColumn::make('karyawan.alamat')
                     ->label('Alamat Karyawan'),
                 TextColumn::make('karyawan.total_jam_lembur')

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\Admin\PenggajianResource\Pages;
+namespace App\Filament\Resources\Personalia\PenggajianResource\Pages;
 
-use App\Filament\Resources\Admin\PenggajianResource;
+use App\Filament\Resources\Personalia\PenggajianResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ManageRecords;
 

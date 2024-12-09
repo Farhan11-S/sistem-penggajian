@@ -11,6 +11,7 @@ use Filament\Tables\Table;
 
 use App\Models\GajiKaryawan;
 use App\Models\StatusGajiKaryawan;
+use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Filament\Actions\StaticAction;
 use Filament\Forms\Components\Placeholder;
@@ -20,6 +21,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Get;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Number;
@@ -43,6 +46,7 @@ class VerifikasiResource extends Resource
         return $table
             ->query(function () {
                 $newQuery = StatusGajiKaryawan::whereHas('gajiKaryawan')
+                    ->select('*', DB::raw('MONTHNAME(created_at) as bulan'))
                     ->with([
                         'karyawan' => fn($query) => $query
                             ->select('id', 'user_id', 'alamat')
@@ -133,14 +137,26 @@ class VerifikasiResource extends Resource
             ->columns([
                 TextColumn::make('karyawan.user.name')
                     ->label('Nama Karyawan'),
+                TextColumn::make('bulan')
+                    ->label('Bulan Gaji'),
                 TextColumn::make('karyawan.alamat')
                     ->label('Alamat Karyawan'),
                 TextColumn::make('karyawan.total_jam_lembur')
                     ->label('Total Jam Lembur Karyawan')
                     ->formatStateUsing(fn(string $state): string => CarbonInterval::seconds($state)->cascade()->totalHours . ' jam'),
+                TextColumn::make('is_completed')
+                    ->label('Status Gaji')
+                    ->formatStateUsing(fn(bool $state): string => $state ? 'Selesai' : 'Belum Selesai'),
             ])
             ->filters([
-                //
+                SelectFilter::make('bulan')
+                    ->options(fn(): array => StatusGajiKaryawan::query()->whereHas('gajiKaryawan')
+                        ->select('created_at', DB::raw('MONTHNAME(created_at) as bulan'))->get()->pluck('bulan', 'bulan')->toArray())
+                    ->query(fn(Builder $query, $data): Builder => $query->when(
+                        $data['value'],
+                        fn(Builder $query, $value): Builder => $query->whereMonth('created_at', '=', Carbon::parse($value)->month)
+                    ))
+                    ->default(Carbon::now()->format('F')),
             ])
             ->actions([
                 Tables\Actions\Action::make('view')
@@ -218,7 +234,7 @@ class VerifikasiResource extends Resource
                                                 ->content(fn(Get $get) => Number::currency($get('uang_lembur_per_jam') * $get('data.jam_lembur_minggu'), 'IDR')),
                                         ])
                                         ->disabled(),
-                                    Section::make('Perhitungan Keseluruhan')
+                                    Section::make('Total Penerimaan')
                                         ->description('Detail perhitungan gaji keseluruhan (gaji pokok + tunjangan + santunan + uang lembur)')
                                         ->schema([
                                             Placeholder::make('jumlah_uang_lembur')
@@ -234,6 +250,7 @@ class VerifikasiResource extends Resource
                             ]),
                         Section::make('Detail Potongan Gaji')
                             ->statePath('potongan')
+                            ->hidden(fn($record) => $record->potonganGajiKaryawan == null)
                             ->description('Menampilkan detail data potongan gaji karyawan')
                             ->columns([
                                 'sm' => 1,
@@ -276,7 +293,7 @@ class VerifikasiResource extends Resource
                                     ->integer()
                                     ->required()
                                     ->default(0),
-                                Section::make('Perhitungan Keseluruhan')
+                                Section::make('Total Potongan')
                                     ->description('Total setelah menambahkan semua potongan gaji')
                                     ->schema([
                                         Placeholder::make('jumlah_potongan')
@@ -291,6 +308,24 @@ class VerifikasiResource extends Resource
                                             )),
                                     ])
                             ]),
+                        Section::make('Total yang perlu dibayarkan')
+                            ->description('Total setelah pengurangan total penerimaan dan total potongan')
+                            ->schema([
+                                Placeholder::make('jumlah_yang_dibayarkan')
+                                    ->content(fn(Get $get) => Number::currency(
+                                        ($get('gaji.gaji_pokok') +
+                                            $get('gaji.tunjangan_pemondokan') +
+                                            $get('gaji.santunan_sosial') +
+                                            ($get('gaji.uang_lembur_per_jam') * $get('gaji.data.total_jam_lembur'))) -
+                                            ($get('potongan.iuran_pekerja') +
+                                                $get('potongan.pinjaman_koperasi') +
+                                                $get('potongan.pinjaman_perusahaan') +
+                                                $get('potongan.sakit') +
+                                                $get('potongan.absen') +
+                                                $get('potongan.infaq')),
+                                        'IDR'
+                                    )),
+                            ])
                     ])
                     ->action(function ($record): void {
                         // $record->statusGaji()->create();
@@ -300,7 +335,7 @@ class VerifikasiResource extends Resource
                     ->modalHeading(fn($record): string => __('personalia.verifikasi.modal.heading', ['label' => $record->karyawan->user->name]))
                     ->modalSubmitAction(function (StaticAction $action, $record) {
                         if ($record->potonganGajiKaryawan == null) {
-                            return $action->hidden(fn($record) => $record->potonganGajiKaryawan == null);
+                            return $action->hidden(fn() => $record->potonganGajiKaryawan == null);
                         }
                         return $action->label(__('personalia.verifikasi.modal.verify'))->color('success');
                     })

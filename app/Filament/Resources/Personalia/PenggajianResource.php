@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\Admin;
+namespace App\Filament\Resources\Personalia;
 
-use App\Filament\Resources\Admin\PenggajianResource\Pages;
+use App\Filament\Resources\Personalia\PenggajianResource\Pages;
 use App\Models\Karyawan;
 use Carbon\CarbonInterval;
 use Filament\Actions\StaticAction;
@@ -21,11 +21,6 @@ class PenggajianResource extends Resource
     protected static ?string $model = Karyawan::class;
 
     protected static ?string $navigationIcon = 'heroicon-s-inbox-stack';
-
-    public static function shouldRegisterNavigation(): bool
-    {
-        return auth()->user()->hasRole('admin');
-    }
 
     public static function form(Form $form): Form
     {
