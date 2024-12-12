@@ -39,7 +39,7 @@ class PenggajianResource extends Resource
                 TextColumn::make('alamat'),
                 TextColumn::make('jumlah_absensi')
                     ->label('Absensi'),
-                TextColumn::make('total_jam_lembur')->placeholder(__('admin.penggajian.columns.placeholder_jam_lembur'))
+                TextColumn::make('total_jam_lembur')->placeholder(__('personalia.penggajian.columns.placeholder_jam_lembur'))
                     ->label('Total Jam Lembur')
                     ->formatStateUsing(fn(string $state): string => CarbonInterval::seconds($state)->cascade()->totalHours . ' jam'),
             ])
@@ -59,9 +59,9 @@ class PenggajianResource extends Resource
                     ->action(function ($record): void {
                         $record->statusGaji()->create();
                     })
-                    ->label(__('admin.penggajian.modal.label'))
-                    ->modalHeading(fn($record): string => __('admin.penggajian.modal.heading', ['label' => $record->user->name]))
-                    ->modalSubmitAction(fn(StaticAction $action) => $action->label(__('admin.penggajian.modal.submit')))
+                    ->label(__('personalia.penggajian.modal.label'))
+                    ->modalHeading(fn($record): string => __('personalia.penggajian.modal.heading', ['label' => $record->user->name]))
+                    ->modalSubmitAction(fn(StaticAction $action) => $action->label(__('personalia.penggajian.modal.submit')))
                     ->modalCancelAction(fn(StaticAction $action) => $action->label(__('filament-actions::view.single.modal.actions.close.label')))
                     ->color('gray')
                     ->icon(FilamentIcon::resolve('actions::view-action') ?? 'heroicon-m-eye')

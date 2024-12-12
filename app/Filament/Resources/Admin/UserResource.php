@@ -14,7 +14,10 @@ use Filament\Tables;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Tables\Actions\Action;
 use Spatie\Permission\Models\Role;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Blade;
 
 class UserResource extends Resource
 {
@@ -41,7 +44,7 @@ class UserResource extends Resource
                     ->live(),
                 TextInput::make('alamat')
                     ->required()
-                    ->hidden(fn (Get $get): bool => $get('role') != 'karyawan'),
+                    ->hidden(fn(Get $get): bool => $get('role') != 'karyawan'),
             ]);
     }
 

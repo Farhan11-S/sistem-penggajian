@@ -21,6 +21,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Number;
+use Filament\Tables\Actions\Action;
 
 class PengisianGajiResource extends Resource
 {
@@ -264,6 +265,12 @@ class PengisianGajiResource extends Resource
                             ]
                         ];
                     }),
+            Action::make('export')
+                ->icon('heroicon-s-document-arrow-up')
+                ->iconButton()
+                ->color('danger')
+                ->url(fn(): string => route('rincian-gaji'))
+                ->openUrlInNewTab(),
             ]);
     }
 
