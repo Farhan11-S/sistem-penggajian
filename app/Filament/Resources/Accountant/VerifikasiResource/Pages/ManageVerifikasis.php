@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\Personalia\VerifikasiResource\Pages;
+namespace App\Filament\Resources\Accountant\VerifikasiResource\Pages;
 
-use App\Filament\Resources\Personalia\VerifikasiResource;
+use App\Filament\Resources\Accountant\VerifikasiResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ManageRecords;
 

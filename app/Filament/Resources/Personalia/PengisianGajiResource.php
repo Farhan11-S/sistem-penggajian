@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Personalia;
 
 use App\Filament\Resources\Personalia\PengisianGajiResource\Pages;
 use App\Models\GajiKaryawan;
+use App\Models\PotonganGajiKaryawan;
 use App\Models\StatusGajiKaryawan;
 use Carbon\CarbonInterval;
 use Filament\Actions\StaticAction;
@@ -230,9 +231,69 @@ class PengisianGajiResource extends Resource
                                         ])
                                 ])->columnSpanFull(),
                             ]),
+                        Section::make('Form Potongan Gaji')
+                            ->description('Masukkan data potongan gaji karyawan')
+                            ->columns([
+                                'sm' => 1,
+                                'xl' => 2,
+                            ])
+                            ->schema([
+                                TextInput::make('iuran_pekerja')
+                                    ->live(true)
+                                    ->prefix('RP')
+                                    ->integer()
+                                    ->required()
+                                    ->default(0),
+                                TextInput::make('pinjaman_koperasi')
+                                    ->live(true)
+                                    ->prefix('RP')
+                                    ->integer()
+                                    ->required()
+                                    ->default(0),
+                                TextInput::make('pinjaman_perusahaan')
+                                    ->live(true)
+                                    ->prefix('RP')
+                                    ->integer()
+                                    ->required()
+                                    ->default(0),
+                                TextInput::make('sakit')
+                                    ->live(true)
+                                    ->prefix('RP')
+                                    ->integer()
+                                    ->required()
+                                    ->default(0),
+                                TextInput::make('absen')
+                                    ->live(true)
+                                    ->prefix('RP')
+                                    ->integer()
+                                    ->required()
+                                    ->default(0),
+                                TextInput::make('infaq')
+                                    ->live(true)
+                                    ->prefix('RP')
+                                    ->integer()
+                                    ->required()
+                                    ->default(0),
+                                Section::make('Perhitungan Keseluruhan')
+                                    ->description('Total setelah menambahkan semua potongan gaji')
+                                    ->schema([
+                                        Placeholder::make('jumlah_potongan')
+                                            ->content(fn(Get $get) => Number::currency(
+                                                $get('iuran_pekerja') +
+                                                    $get('pinjaman_koperasi') +
+                                                    $get('pinjaman_perusahaan') +
+                                                    $get('sakit') +
+                                                    $get('absen') +
+                                                    $get('infaq'),
+                                                'IDR'
+                                            )),
+                                    ])
+                            ]),
                     ])
                     ->action(function ($record, $data): void {
                         $totalJamLembur = CarbonInterval::seconds($record->karyawan->total_jam_lembur)->cascade()->totalHours;
+
+                        // Penggajian Karyawan
                         $gajiKaryawanData = [
                             ...$data,
                             'jumlah_uang_lembur' => $data['uang_lembur_per_jam'] * $totalJamLembur,
@@ -242,9 +303,27 @@ class PengisianGajiResource extends Resource
                                 ($data['uang_lembur_per_jam'] * $totalJamLembur),
                             'pembulatan_bulan_lalu' => 0,
                         ];
-                        $gajiKaryawan = GajiKaryawan::create($gajiKaryawanData);
-                        $record->gajiKaryawan()->associate($gajiKaryawan);
-                        $record->save();
+                        
+                        $potonganGajiKaryawanData = [
+                            ...$data,
+                            'pembulatan_bulan_ini' => 0,
+                            'jumlah_potongan' => $data['iuran_pekerja'] +
+                            $data['pinjaman_koperasi'] +
+                            $data['pinjaman_perusahaan'] +
+                            $data['sakit'] +
+                            $data['absen'] +
+                            $data['infaq'],
+                        ];
+                        
+                        DB::transaction(function () use ($record, $gajiKaryawanData, $potonganGajiKaryawanData) {
+                            $gajiKaryawan = GajiKaryawan::create($gajiKaryawanData);
+                            $record->gajiKaryawan()->associate($gajiKaryawan);
+                            $record->save();
+
+                            $potonganGajiKaryawan = PotonganGajiKaryawan::create($potonganGajiKaryawanData);
+                            $record->potonganGajiKaryawan()->associate($potonganGajiKaryawan);
+                            $record->save();
+                        });
                     })
                     ->label(__('personalia.pengisian.modal.label'))
                     ->modalHeading(fn($record): string => __('personalia.pengisian.modal.heading', ['label' => $record->karyawan->user->name]))

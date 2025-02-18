@@ -19,21 +19,21 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-class PDEPanelProvider extends PanelProvider
+class AccountantPanelProvider extends PanelProvider
 {
-    protected static ?string $title = 'Dashboard PDE';
+    protected static ?string $title = 'Dashboard Accountant';
 
     public function panel(Panel $panel): Panel
     {
         return $panel
             ->default()
-            ->id('pde')
+            ->id('accountant')
             ->path('')
             ->login(LoginPage::class)
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->discoverResources(in: app_path('Filament/Resources/PDE'), for: 'App\\Filament\\Resources\\PDE')
+            ->discoverResources(in: app_path('Filament/Resources/Accountant'), for: 'App\\Filament\\Resources\\Accountant')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')

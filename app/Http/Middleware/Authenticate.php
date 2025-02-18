@@ -14,6 +14,8 @@ class Authenticate extends Middleware
      */
     protected function authenticate($request, array $guards): void
     {
+        if ($request->getPathInfo() == "/logout") return;
+
         $guard = Filament::auth();
 
         if (! $guard->check()) {
@@ -29,10 +31,10 @@ class Authenticate extends Middleware
 
         $panel = Filament::getCurrentPanel();
 
-        // abort_if(
-        //     !$user->canAccessPanel($panel),
-        //     403,
-        // );
+        abort_if(
+            !$user->canAccessPanel($panel),
+            403,
+        );
     }
 
     protected function redirectTo($request): ?string

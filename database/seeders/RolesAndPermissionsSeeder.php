@@ -28,11 +28,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'personalia' => [
                 'gaji',
             ],
-            'pde' => [
-                'review_pde',
-            ],
             'accountant' => [
-                'review_accountant',
+                'review',
+            ],
+            'kasir' => [
+                'pencairan',
             ]
         ];
 
@@ -43,8 +43,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'admin' => $insertPermissions('admin'),
             'karyawan' => $insertPermissions('karyawan'),
             'personalia' => $insertPermissions('personalia'),
-            'pde' => $insertPermissions('pde'),
             'accountant' => $insertPermissions('accountant'),
+            'kasir' => $insertPermissions('kasir'),
         ];
 
         $count = 1;
