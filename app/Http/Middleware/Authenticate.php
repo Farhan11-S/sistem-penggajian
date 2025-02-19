@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\StatusGajiKaryawan;
 use Filament\Facades\Filament;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
@@ -31,10 +32,15 @@ class Authenticate extends Middleware
 
         $panel = Filament::getCurrentPanel();
 
-        abort_if(
-            !$user->canAccessPanel($panel),
-            403,
-        );
+        // abort_if(
+        //     !$user->canAccessPanel($panel),
+        //     403,
+        // );
+
+        if (!$user->canAccessPanel($panel)) {
+            $supposedPanel = Filament::getPanel($user->getRoleNames()[0]);
+            Filament::setCurrentPanel($supposedPanel);
+        }
     }
 
     protected function redirectTo($request): ?string
