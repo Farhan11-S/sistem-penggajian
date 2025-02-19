@@ -131,7 +131,10 @@ class VerifikasiResource extends Resource
                         'karyawan.user',
                         'gajiKaryawan',
                         'potonganGajiKaryawan',
-                    ]);
+                    ])
+                    ->where('is_completed', false)
+                    ->where('verified_at', null)
+                    ->where('rejected_reason', null);
 
                 return $newQuery;
             })
@@ -199,26 +202,18 @@ class VerifikasiResource extends Resource
                                 TextInput::make('gaji_pokok')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('tunjangan_pemondokan')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('santunan_sosial')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('uang_lembur_per_jam')
                                     ->live(true)
-                                    ->prefix('RP')
-                                    ->integer()
-                                    ->required(),
+                                    ->prefix('RP'),
                                 Split::make([
                                     Section::make('Perhitungan Lembur')
                                         ->description('Detail perhitungan gaji lembur karyawan (uang lembur per jam X jam lembur)')
@@ -248,7 +243,8 @@ class VerifikasiResource extends Resource
                                         ])
                                 ])
                                     ->columnSpanFull(),
-                            ]),
+                            ])
+                            ->disabled(),
                         Section::make('Detail Potongan Gaji')
                             ->statePath('potongan')
                             ->hidden(fn($record) => $record->potonganGajiKaryawan == null)
@@ -261,38 +257,26 @@ class VerifikasiResource extends Resource
                                 TextInput::make('iuran_pekerja')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('pinjaman_koperasi')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('pinjaman_perusahaan')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('sakit')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('absen')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('infaq')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 Section::make('Total Potongan')
                                     ->description('Total setelah menambahkan semua potongan gaji')
@@ -308,7 +292,8 @@ class VerifikasiResource extends Resource
                                                 'IDR'
                                             )),
                                     ])
-                            ]),
+                            ])
+                            ->disabled(),
                         Section::make('Total yang perlu dibayarkan')
                             ->description('Total setelah pengurangan total penerimaan dan total potongan')
                             ->schema([
@@ -327,25 +312,43 @@ class VerifikasiResource extends Resource
                                         'IDR'
                                     )),
                             ])
+                            ->disabled(),
+                        Section::make('Verifikasi Gaji')
+                            ->description('Verifikasi gaji karyawan')
+                            ->schema([
+                                TextInput::make('rejected_reason')
+                                    ->label('Alasan Penolakan')
+                                    ->required()
+                                    ->columnSpanFull(),
+                            ]),
                     ])
-                    ->action(function ($record): void {
-                        // $record->statusGaji()->create();
+                    // ->disabledForm()
+                    ->action(function ($record, $data, array $arguments): void {
+                        if ($arguments['reject'] ?? false) {
+                            $record->update([
+                                'rejected_at' => now(),
+                                'rejected_reason' => $data['rejected_reason'],
+                            ]);
+                            return;
+                        }
+
+                        $record->update([
+                            'verified_at' => now(),
+                        ]);
                     })
-                    ->disabledForm()
-                    ->label(__('personalia.verifikasi.modal.label'))
-                    ->modalHeading(fn($record): string => __('personalia.verifikasi.modal.heading', ['label' => $record->karyawan->user->name]))
+                    ->label(__('accountant.verifikasi.modal.label'))
+                    ->modalHeading(fn($record): string => __('accountant.verifikasi.modal.heading', ['label' => $record->karyawan->user->name]))
                     ->modalSubmitAction(function (StaticAction $action, $record) {
-                        if ($record->potonganGajiKaryawan == null) {
-                            return $action->hidden(fn() => $record->potonganGajiKaryawan == null);
-                        }
-                        return $action->label(__('personalia.verifikasi.modal.verify'))->color('success');
+                        return $action->label(__('accountant.verifikasi.modal.verify'))
+                            ->color('success');
                     })
-                    ->modalCancelAction(function (StaticAction $action, $record) {
-                        if ($record->potonganGajiKaryawan != null) {
-                            return $action->label(__('personalia.verifikasi.modal.reject'))->color('danger');
-                        }
-                        return $action->label(__('filament-actions::view.single.modal.actions.close.label'));
-                    })
+                    ->modalCancelAction(false)
+                    ->extraModalFooterActions(fn(Action $action): array => [
+                        $action->makeModalSubmitAction(__('accountant.verifikasi.modal.reject'), arguments: [
+                            'reject' => true,
+                        ])
+                            ->color('danger'),
+                    ])
                     ->color('gray')
                     ->icon(FilamentIcon::resolve('actions::view-action') ?? 'heroicon-m-eye')
                     ->fillForm(function (Model $record): array {
@@ -393,5 +396,10 @@ class VerifikasiResource extends Resource
         return [
             'index' => Pages\ManageVerifikasis::route('/'),
         ];
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return 'Verifikasi Penggajian';
     }
 }

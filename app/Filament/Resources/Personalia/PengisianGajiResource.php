@@ -125,7 +125,11 @@ class PengisianGajiResource extends Resource
                             )"
                             )),
                         'karyawan.user',
-                    ]);
+                        'gajiKaryawan',
+                        'potonganGajiKaryawan',
+                    ])
+                    ->where('is_completed', false)
+                    ->orWhere(fn($query) => $query->where('verified_at', null)->where('rejected_reason', '!=', null));
 
                 return $newQuery;
             })
@@ -146,6 +150,16 @@ class PengisianGajiResource extends Resource
             ->actions([
                 Tables\Actions\Action::make('view')
                     ->form([
+                        Section::make('Verifikasi Gaji')
+                            ->description('Verifikasi gaji karyawan')
+                            ->schema([
+                                TextInput::make('rejected_reason')
+                                    ->label('Alasan Penolakan')
+                                    ->required()
+                                    ->columnSpanFull(),
+                            ])
+                            ->disabled()
+                            ->hidden(fn($record) => $record->rejected_reason === null),
                         Section::make('Data Karyawan')
                             ->statePath('data')
                             ->description('Data karyawan yang akan digaji')
@@ -303,18 +317,18 @@ class PengisianGajiResource extends Resource
                                 ($data['uang_lembur_per_jam'] * $totalJamLembur),
                             'pembulatan_bulan_lalu' => 0,
                         ];
-                        
+
                         $potonganGajiKaryawanData = [
                             ...$data,
                             'pembulatan_bulan_ini' => 0,
                             'jumlah_potongan' => $data['iuran_pekerja'] +
-                            $data['pinjaman_koperasi'] +
-                            $data['pinjaman_perusahaan'] +
-                            $data['sakit'] +
-                            $data['absen'] +
-                            $data['infaq'],
+                                $data['pinjaman_koperasi'] +
+                                $data['pinjaman_perusahaan'] +
+                                $data['sakit'] +
+                                $data['absen'] +
+                                $data['infaq'],
                         ];
-                        
+
                         DB::transaction(function () use ($record, $gajiKaryawanData, $potonganGajiKaryawanData) {
                             $gajiKaryawan = GajiKaryawan::create($gajiKaryawanData);
                             $record->gajiKaryawan()->associate($gajiKaryawan);
@@ -325,7 +339,13 @@ class PengisianGajiResource extends Resource
                             $record->save();
                         });
                     })
-                    ->label(__('personalia.pengisian.modal.label'))
+                    ->label(function ($record): string {
+                        if ($record->rejected_at !== null) {
+                            return __('personalia.pengisian.columns.reinput_gaji');
+                        }
+
+                        return __('personalia.pengisian.columns.input_gaji');
+                    })
                     ->modalHeading(fn($record): string => __('personalia.pengisian.modal.heading', ['label' => $record->karyawan->user->name]))
                     ->modalSubmitAction(fn(StaticAction $action) => $action->label(__('personalia.pengisian.modal.submit')))
                     ->modalCancelAction(fn(StaticAction $action) => $action->label(__('filament-actions::view.single.modal.actions.close.label')))
@@ -341,15 +361,26 @@ class PengisianGajiResource extends Resource
                                 'jam_lembur_raya' => CarbonInterval::seconds($record->karyawan->jam_lembur_raya)->cascade()->totalHours,
                                 'jam_lembur_minggu' => CarbonInterval::seconds($record->karyawan->jam_lembur_minggu)->cascade()->totalHours,
                                 'total_jam_lembur' => CarbonInterval::seconds($record->karyawan->total_jam_lembur)->cascade()->totalHours,
-                            ]
+                            ],
+                            'gaji_pokok' => $record->gajiKaryawan?->gaji_pokok,
+                            'tunjangan_pemondokan' => $record->gajiKaryawan?->tunjangan_pemondokan,
+                            'santunan_sosial' => $record->gajiKaryawan?->santunan_sosial,
+                            'uang_lembur_per_jam' => $record->gajiKaryawan?->uang_lembur_per_jam,
+                            'iuran_pekerja' => $record->potonganGajiKaryawan?->iuran_pekerja,
+                            'pinjaman_koperasi' => $record->potonganGajiKaryawan?->pinjaman_koperasi,
+                            'pinjaman_perusahaan' => $record->potonganGajiKaryawan?->pinjaman_perusahaan,
+                            'sakit' => $record->potonganGajiKaryawan?->sakit,
+                            'absen' => $record->potonganGajiKaryawan?->absen,
+                            'infaq' => $record->potonganGajiKaryawan?->infaq,
+                            'rejected_reason' => $record->rejected_reason,
                         ];
                     }),
-            Action::make('export')
-                ->icon('heroicon-s-document-arrow-up')
-                ->iconButton()
-                ->color('danger')
-                ->url(fn(): string => route('rincian-gaji'))
-                ->openUrlInNewTab(),
+                Action::make('export')
+                    ->icon('heroicon-s-document-arrow-up')
+                    ->iconButton()
+                    ->color('danger')
+                    ->url(fn(): string => route('rincian-gaji'))
+                    ->openUrlInNewTab(),
             ]);
     }
 

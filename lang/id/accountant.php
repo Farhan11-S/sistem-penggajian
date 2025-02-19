@@ -1,11 +1,12 @@
 <?php
 
 return [
-    'potongan' => [
+    'verifikasi' => [
         'modal' => [
-            'label' => 'Input Potongan',
-            'heading' => 'Input Potongan Gaji :label',
-            'submit' => 'Simpan',
+            'label' => 'Detail Verifikasi',
+            'heading' => 'Detail Verifikasi Gaji :label',
+            'verify' => 'Verifikasi',
+            'reject' => 'Tolak',
         ],
     ],
 ];

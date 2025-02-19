@@ -39,6 +39,8 @@ class Authenticate extends Middleware
 
     protected function redirectTo($request): ?string
     {
-        return Filament::getLoginUrl();
+        // return Filament::getLoginUrl();
+
+        return '/login';
     }
 }
