@@ -1,34 +1,36 @@
 <?php
 
-namespace App\Filament\Resources\Personalia;
+namespace App\Filament\Resources\Kasir;
 
-use App\Filament\Resources\Personalia\PengisianGajiResource\Pages;
-use App\Models\GajiKaryawan;
-use App\Models\PotonganGajiKaryawan;
+use App\Filament\Resources\Kasir\PencairanResource\Pages;
 use App\Models\StatusGajiKaryawan;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+
+use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Filament\Actions\StaticAction;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Split;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Forms\Get;
-use Filament\Resources\Resource;
 use Filament\Support\Facades\FilamentIcon;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Number;
 use Filament\Tables\Actions\Action;
 
-class PengisianGajiResource extends Resource
+class PencairanResource extends Resource
 {
-    protected static ?string $model = GajiKaryawan::class;
+    protected static ?string $model = StatusGajiKaryawan::class;
 
-    protected static ?string $navigationIcon = 'heroicon-s-inbox-arrow-down';
+    protected static ?string $navigationIcon = 'heroicon-s-document-check';
 
     public static function form(Form $form): Form
     {
@@ -42,7 +44,7 @@ class PengisianGajiResource extends Resource
     {
         return $table
             ->query(function () {
-                $newQuery = StatusGajiKaryawan::whereDoesntHave('gajiKaryawan')
+                $newQuery = StatusGajiKaryawan::whereHas('gajiKaryawan')
                     ->select('*', DB::raw('MONTHNAME(created_at) as bulan'))
                     ->with([
                         'karyawan' => fn($query) => $query
@@ -57,18 +59,18 @@ class PengisianGajiResource extends Resource
                                 }
                             ], DB::raw(
                                 "TIME_TO_SEC(
-                                TIMEDIFF(
-                                    time(`jam_pulang`), 
-                                    CASE 
-                                        WHEN DATEDIFF(
-                                            `created_at`, 
-                                            '20170910'
-                                        ) % 7 = 0 OR is_raya = 1 
-                                        THEN `jam_masuk`
-                                        ELSE '17:00:00'
-                                    END
-                                )
-                            )"
+                            TIMEDIFF(
+                                time(`jam_pulang`), 
+                                CASE 
+                                    WHEN DATEDIFF(
+                                        `created_at`, 
+                                        '20170910'
+                                    ) % 7 = 0 OR is_raya = 1 
+                                    THEN `jam_masuk`
+                                    ELSE '17:00:00'
+                                END
+                            )
+                        )"
                             ))
                             ->withSum([
                                 'absensi as jam_lembur_biasa' => function ($newQuery) {
@@ -77,18 +79,18 @@ class PengisianGajiResource extends Resource
                                 }
                             ], DB::raw(
                                 "TIME_TO_SEC(
-                                TIMEDIFF(
-                                    time(`jam_pulang`), 
-                                    CASE 
-                                        WHEN DATEDIFF(
-                                            `created_at`, 
-                                            '20170910'
-                                        ) % 7 = 0 OR is_raya = 1 
-                                        THEN `jam_pulang`
-                                        ELSE '17:00:00'
-                                    END
-                                )
-                            )"
+                            TIMEDIFF(
+                                time(`jam_pulang`), 
+                                CASE 
+                                    WHEN DATEDIFF(
+                                        `created_at`, 
+                                        '20170910'
+                                    ) % 7 = 0 OR is_raya = 1 
+                                    THEN `jam_pulang`
+                                    ELSE '17:00:00'
+                                END
+                            )
+                        )"
                             ))
                             ->withSum([
                                 'absensi as jam_lembur_raya' => function ($newQuery) {
@@ -98,11 +100,11 @@ class PengisianGajiResource extends Resource
                                 }
                             ], DB::raw(
                                 "TIME_TO_SEC(
-                                TIMEDIFF(
-                                    TIME(`jam_pulang`), 
-                                    TIME(`jam_masuk`)
-                                )
-                            )"
+                            TIMEDIFF(
+                                TIME(`jam_pulang`), 
+                                TIME(`jam_masuk`)
+                            )
+                        )"
                             ))
                             ->withSum([
                                 'absensi as jam_lembur_minggu' => function ($newQuery) {
@@ -111,25 +113,24 @@ class PengisianGajiResource extends Resource
                                 }
                             ], DB::raw(
                                 "TIME_TO_SEC(
-                                TIMEDIFF(
-                                    TIME(`jam_pulang`), 
-                                    CASE 
-                                        WHEN DATEDIFF(
-                                            `created_at`, 
-                                            '20170910'
-                                        ) % 7 = 0
-                                        THEN `jam_masuk`
-                                        ELSE 'jam_pulang'
-                                    END
-                                )
-                            )"
+                            TIMEDIFF(
+                                TIME(`jam_pulang`), 
+                                CASE 
+                                    WHEN DATEDIFF(
+                                        `created_at`, 
+                                        '20170910'
+                                    ) % 7 = 0
+                                    THEN `jam_masuk`
+                                    ELSE 'jam_pulang'
+                                END
+                            )
+                        )"
                             )),
                         'karyawan.user',
                         'gajiKaryawan',
                         'potonganGajiKaryawan',
                     ])
-                    ->where('is_completed', false)
-                    ->orWhere(fn($query) => $query->where('verified_at', null)->where('rejected_reason', '!=', null));
+                    ->whereNotNull('verified_at');
 
                 return $newQuery;
             })
@@ -143,22 +144,23 @@ class PengisianGajiResource extends Resource
                 TextColumn::make('karyawan.total_jam_lembur')
                     ->label('Total Jam Lembur Karyawan')
                     ->formatStateUsing(fn(string $state): string => CarbonInterval::seconds($state)->cascade()->totalHours . ' jam'),
+                TextColumn::make('is_completed')
+                    ->label('Status Gaji')
+                    ->formatStateUsing(fn(bool $state): string => $state ? 'Sudah Dicairkan' : 'Belum Dicairkan'),
             ])
             ->filters([
-                //
+                SelectFilter::make('bulan')
+                    ->options(fn(): array => StatusGajiKaryawan::query()->whereHas('gajiKaryawan')
+                        ->select('created_at', DB::raw('MONTHNAME(created_at) as bulan'))->get()->pluck('bulan', 'bulan')->toArray())
+                    ->query(fn(Builder $query, $data): Builder => $query->when(
+                        $data['value'],
+                        fn(Builder $query, $value): Builder => $query->whereMonth('created_at', '=', Carbon::parse($value)->month)
+                    ))
+                    ->default(Carbon::now()->format('F')),
             ])
             ->actions([
                 Tables\Actions\Action::make('view')
                     ->form([
-                        Section::make('Verifikasi Gaji')
-                            ->description('Verifikasi gaji karyawan')
-                            ->schema([
-                                TextInput::make('rejected_reason')
-                                    ->label('Alasan Penolakan')
-                                    ->columnSpanFull(),
-                            ])
-                            ->disabled()
-                            ->hidden(fn($record) => $record->rejected_reason === null),
                         Section::make('Data Karyawan')
                             ->statePath('data')
                             ->description('Data karyawan yang akan digaji')
@@ -185,8 +187,9 @@ class PengisianGajiResource extends Resource
                                     ->suffix('JAM'),
                             ])
                             ->disabled(),
-                        Section::make('Form Gaji')
-                            ->description('Masukkan data penerimaan gaji karyawan')
+                        Section::make('Detail Penerimaan Gaji')
+                            ->statePath('gaji')
+                            ->description('Menampilkan data penerimaan gaji karyawan')
                             ->columns([
                                 'sm' => 1,
                                 'xl' => 2,
@@ -195,26 +198,18 @@ class PengisianGajiResource extends Resource
                                 TextInput::make('gaji_pokok')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('tunjangan_pemondokan')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('santunan_sosial')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('uang_lembur_per_jam')
                                     ->live(true)
-                                    ->prefix('RP')
-                                    ->integer()
-                                    ->required(),
+                                    ->prefix('RP'),
                                 Split::make([
                                     Section::make('Perhitungan Lembur')
                                         ->description('Detail perhitungan gaji lembur karyawan (uang lembur per jam X jam lembur)')
@@ -231,7 +226,7 @@ class PengisianGajiResource extends Resource
                                                 ->content(fn(Get $get) => Number::currency($get('uang_lembur_per_jam') * $get('data.jam_lembur_minggu'), 'IDR')),
                                         ])
                                         ->disabled(),
-                                    Section::make('Perhitungan Keseluruhan')
+                                    Section::make('Total Penerimaan')
                                         ->description('Detail perhitungan gaji keseluruhan (gaji pokok + tunjangan + santunan + uang lembur)')
                                         ->schema([
                                             Placeholder::make('jumlah_uang_lembur')
@@ -242,10 +237,14 @@ class PengisianGajiResource extends Resource
                                                     $get('santunan_sosial') +
                                                     ($get('uang_lembur_per_jam') * $get('data.total_jam_lembur')), 'IDR')),
                                         ])
-                                ])->columnSpanFull(),
-                            ]),
-                        Section::make('Form Potongan Gaji')
-                            ->description('Masukkan data potongan gaji karyawan')
+                                ])
+                                    ->columnSpanFull(),
+                            ])
+                            ->disabled(),
+                        Section::make('Detail Potongan Gaji')
+                            ->statePath('potongan')
+                            ->hidden(fn($record) => $record->potonganGajiKaryawan == null)
+                            ->description('Menampilkan detail data potongan gaji karyawan')
                             ->columns([
                                 'sm' => 1,
                                 'xl' => 2,
@@ -254,40 +253,28 @@ class PengisianGajiResource extends Resource
                                 TextInput::make('iuran_pekerja')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('pinjaman_koperasi')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('pinjaman_perusahaan')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('sakit')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('absen')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
                                 TextInput::make('infaq')
                                     ->live(true)
                                     ->prefix('RP')
-                                    ->integer()
-                                    ->required()
                                     ->default(0),
-                                Section::make('Perhitungan Keseluruhan')
+                                Section::make('Total Potongan')
                                     ->description('Total setelah menambahkan semua potongan gaji')
                                     ->schema([
                                         Placeholder::make('jumlah_potongan')
@@ -301,58 +288,45 @@ class PengisianGajiResource extends Resource
                                                 'IDR'
                                             )),
                                     ])
-                            ]),
+                            ])
+                            ->disabled(),
+                        Section::make('Total yang perlu dibayarkan')
+                            ->description('Total setelah pengurangan total penerimaan dan total potongan')
+                            ->schema([
+                                Placeholder::make('jumlah_yang_dibayarkan')
+                                    ->content(fn(Get $get) => Number::currency(
+                                        ($get('gaji.gaji_pokok') +
+                                            $get('gaji.tunjangan_pemondokan') +
+                                            $get('gaji.santunan_sosial') +
+                                            ($get('gaji.uang_lembur_per_jam') * $get('gaji.data.total_jam_lembur'))) -
+                                            ($get('potongan.iuran_pekerja') +
+                                                $get('potongan.pinjaman_koperasi') +
+                                                $get('potongan.pinjaman_perusahaan') +
+                                                $get('potongan.sakit') +
+                                                $get('potongan.absen') +
+                                                $get('potongan.infaq')),
+                                        'IDR'
+                                    )),
+                            ])
+                            ->disabled(),
                     ])
-                    ->action(function ($record, $data): void {
-                        $totalJamLembur = CarbonInterval::seconds($record->karyawan->total_jam_lembur)->cascade()->totalHours;
-
-                        // Penggajian Karyawan
-                        $gajiKaryawanData = [
-                            ...$data,
-                            'jumlah_uang_lembur' => $data['uang_lembur_per_jam'] * $totalJamLembur,
-                            'jumlah_penerimaan' => $data['gaji_pokok'] +
-                                $data['tunjangan_pemondokan'] +
-                                $data['santunan_sosial'] +
-                                ($data['uang_lembur_per_jam'] * $totalJamLembur),
-                            'pembulatan_bulan_lalu' => 0,
-                        ];
-
-                        $potonganGajiKaryawanData = [
-                            ...$data,
-                            'pembulatan_bulan_ini' => 0,
-                            'jumlah_potongan' => $data['iuran_pekerja'] +
-                                $data['pinjaman_koperasi'] +
-                                $data['pinjaman_perusahaan'] +
-                                $data['sakit'] +
-                                $data['absen'] +
-                                $data['infaq'],
-                        ];
-
-                        DB::transaction(function () use ($record, $gajiKaryawanData, $potonganGajiKaryawanData) {
-                            $gajiKaryawan = GajiKaryawan::create($gajiKaryawanData);
-                            $record->gajiKaryawan()->associate($gajiKaryawan);
-
-                            $potonganGajiKaryawan = PotonganGajiKaryawan::create($potonganGajiKaryawanData);
-                            $record->potonganGajiKaryawan()->associate($potonganGajiKaryawan);
-
-                            $record->rejected_reason = null;
-                            $record->save();
-                        });
+                    // ->disabledForm()
+                    ->action(function ($record, $data, array $arguments): void {
+                        $record->update([
+                            'is_completed' => true,
+                        ]);
                     })
-                    ->label(function ($record): string {
-                        if ($record->rejected_at !== null) {
-                            return __('personalia.pengisian.columns.reinput_gaji');
-                        }
-
-                        return __('personalia.pengisian.columns.input_gaji');
+                    ->label(__('kasir.pencairan.modal.label'))
+                    ->modalHeading(fn($record): string => __('kasir.pencairan.modal.heading', ['label' => $record->karyawan->user->name]))
+                    ->modalSubmitAction(function (StaticAction $action, $record) {
+                        return $action->label(__('kasir.pencairan.modal.submit'))
+                            ->color('success');
                     })
-                    ->modalHeading(fn($record): string => __('personalia.pengisian.modal.heading', ['label' => $record->karyawan->user->name]))
-                    ->modalSubmitAction(fn(StaticAction $action) => $action->label(__('personalia.pengisian.modal.submit')))
-                    ->modalCancelAction(fn(StaticAction $action) => $action->label(__('filament-actions::view.single.modal.actions.close.label')))
+                    ->modalCancelAction(false)
                     ->color('gray')
-                    ->icon(FilamentIcon::resolve('actions::view-action') ?? 'heroicon-m-pencil-square')
+                    ->icon(FilamentIcon::resolve('actions::view-action') ?? 'heroicon-m-eye')
                     ->fillForm(function (Model $record): array {
-                        return [
+                        $data = [
                             'data' => [
                                 'name' => $record->karyawan->user->name,
                                 'alamat' => $record->karyawan->alamat,
@@ -362,24 +336,32 @@ class PengisianGajiResource extends Resource
                                 'jam_lembur_minggu' => CarbonInterval::seconds($record->karyawan->jam_lembur_minggu)->cascade()->totalHours,
                                 'total_jam_lembur' => CarbonInterval::seconds($record->karyawan->total_jam_lembur)->cascade()->totalHours,
                             ],
-                            'gaji_pokok' => (int) $record->gajiKaryawan?->gaji_pokok,
-                            'tunjangan_pemondokan' => (int) $record->gajiKaryawan?->tunjangan_pemondokan,
-                            'santunan_sosial' => (int) $record->gajiKaryawan?->santunan_sosial,
-                            'uang_lembur_per_jam' => (int) $record->gajiKaryawan?->uang_lembur_per_jam,
-                            'iuran_pekerja' => (int) $record->potonganGajiKaryawan?->iuran_pekerja,
-                            'pinjaman_koperasi' => (int) $record->potonganGajiKaryawan?->pinjaman_koperasi,
-                            'pinjaman_perusahaan' => (int) $record->potonganGajiKaryawan?->pinjaman_perusahaan,
-                            'sakit' => (int) $record->potonganGajiKaryawan?->sakit,
-                            'absen' => (int) $record->potonganGajiKaryawan?->absen,
-                            'infaq' => (int) $record->potonganGajiKaryawan?->infaq,
-                            'rejected_reason' => $record->rejected_reason,
+                            'gaji' => [
+                                'gaji_pokok' => $record->gajiKaryawan->gaji_pokok,
+                                'tunjangan_pemondokan' => $record->gajiKaryawan->tunjangan_pemondokan,
+                                'santunan_sosial' => $record->gajiKaryawan->santunan_sosial,
+                                'uang_lembur_per_jam' => $record->gajiKaryawan->uang_lembur_per_jam,
+                            ],
                         ];
+
+                        if ($record->potonganGajiKaryawan != null) {
+                            $data['potongan'] = [
+                                'iuran_pekerja' => $record->potonganGajiKaryawan->iuran_pekerja,
+                                'pinjaman_koperasi' => $record->potonganGajiKaryawan->pinjaman_koperasi,
+                                'pinjaman_perusahaan' => $record->potonganGajiKaryawan->pinjaman_perusahaan,
+                                'sakit' => $record->potonganGajiKaryawan->sakit,
+                                'absen' => $record->potonganGajiKaryawan->absen,
+                                'infaq' => $record->potonganGajiKaryawan->infaq,
+                            ];
+                        }
+                        return $data;
                     }),
                 Action::make('export')
                     ->icon('heroicon-s-document-arrow-up')
                     ->iconButton()
                     ->color('danger')
                     ->url(fn(): string => route('rincian-gaji'))
+                    ->hidden(fn($record) => !$record->is_completed)
                     ->openUrlInNewTab(),
             ]);
     }
@@ -387,12 +369,12 @@ class PengisianGajiResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManagePersonalias::route('/'),
+            'index' => Pages\ManagePencairans::route('/'),
         ];
     }
 
     public static function getPluralModelLabel(): string
     {
-        return 'Pengisian Gaji';
+        return 'Pencairan Gaji';
     }
 }
