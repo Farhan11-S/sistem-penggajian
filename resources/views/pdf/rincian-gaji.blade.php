@@ -26,11 +26,11 @@
             <td>:</td>
             <td>{{ $identitas['bulan'] }}</td>
         </tr>
-        <tr>
+        <!-- <tr>
             <td>NIP</td>
             <td>:</td>
             <td>{{ $identitas['nip'] }}</td>
-        </tr>
+        </tr> -->
         <tr>
             <td>NAMA</td>
             <td>:</td>
@@ -48,11 +48,11 @@
             <td style="width: 50%;">
                 <h3 style="margin-top: 0; text-transform: uppercase;">Penerimaan</h3>
                 <table style="font-size: small;">
-                    <tr>
+                    <!-- <tr>
                         <td>PENERIMAAN</td>
                         <td>:</td>
                         <td>{{ $penerimaan['penerimaan'] }}</td>
-                    </tr>
+                    </tr> -->
                     <tr>
                         <td>GAJI</td>
                         <td>:</td>
@@ -102,11 +102,6 @@
                         <td>:</td>
                         <td>{{ $penerimaan['jumlah'] }}</td>
                     </tr>
-                    <tr>
-                        <td>PEMBULATAN BULAN LALU</td>
-                        <td>:</td>
-                        <td>{{ $penerimaan['pembulatan_bulan_lalu'] }}</td>
-                    </tr>
                     <!-- <tr>
                         <td>JUMLAH PENERIMAAN</td>
                         <td>:</td>
@@ -120,11 +115,11 @@
             <td style="width: 50%;">
                 <h3 style="margin-top: 0; text-transform: uppercase;">Potongan</h3>
                 <table style="font-size: small;">
-                    <tr>
+                    <!-- <tr>
                         <td>ASTEK</td>
                         <td>:</td>
                         <td>{{ $potongan['aspek'] }}</td>
-                    </tr>
+                    </tr> -->
                     <tr>
                         <td>IURAN PEKERJA</td>
                         <td>:</td>
@@ -169,8 +164,9 @@
             </td>
         </tr>
     </table>
-    <span style="text-transform: uppercase; margin-top: 5px;">Jumlah Penerimaan : Rp. 3.000.000 - Rp. 500.000 = Rp.
-        2.500.000</span>
+    <span style="text-transform: uppercase; margin-top: 5px;">Jumlah Penerimaan : {{ $penerimaan['jumlah'] }} - Rp.
+        {{ $potongan['jumlah_potongan'] }} =
+        {{ $penerimaan['jumlah_penerimaan'] }}</span>
     <hr style="border: 0.5px dashed black; float: none; margin: 10px 0;">
 </body>
 

@@ -318,7 +318,6 @@ class VerifikasiResource extends Resource
                             ->schema([
                                 TextInput::make('rejected_reason')
                                     ->label('Alasan Penolakan')
-                                    ->required()
                                     ->columnSpanFull(),
                             ]),
                     ])
