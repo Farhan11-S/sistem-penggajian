@@ -42,8 +42,7 @@ class PengisianGajiResource extends Resource
     {
         return $table
             ->query(function () {
-                $newQuery = StatusGajiKaryawan::whereDoesntHave('gajiKaryawan')
-                    ->select('*', DB::raw('MONTHNAME(created_at) as bulan'))
+                $newQuery = StatusGajiKaryawan::select('*', DB::raw('MONTHNAME(created_at) as bulan'))
                     ->with([
                         'karyawan' => fn($query) => $query
                             ->select('id', 'user_id', 'alamat')
@@ -143,6 +142,9 @@ class PengisianGajiResource extends Resource
                 TextColumn::make('karyawan.total_jam_lembur')
                     ->label('Total Jam Lembur Karyawan')
                     ->formatStateUsing(fn(string $state): string => CarbonInterval::seconds($state)->cascade()->totalHours . ' jam'),
+                TextColumn::make('karyawan.gajiKaryawan')
+                    ->label('Status')
+                    ->formatStateUsing(fn(string $state): string => $state == null ? 'Belum Diisi' : 'Sudah Diisi'),
             ])
             ->filters([
                 //
