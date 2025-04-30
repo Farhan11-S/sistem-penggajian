@@ -152,7 +152,7 @@ class PengisianGajiResource extends Resource
                         } elseif ($record->gajiKaryawan()->exists()) {
                             return 'Sudah Diinput';
                         }
-                        return 'Menunggu Verifikasi';
+                        return 'Belum Diisi';
                     }),
             ])
             ->filters([
