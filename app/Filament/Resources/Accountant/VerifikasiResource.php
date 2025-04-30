@@ -132,9 +132,7 @@ class VerifikasiResource extends Resource
                         'gajiKaryawan',
                         'potonganGajiKaryawan',
                     ])
-                    ->where('is_completed', false)
-                    ->where('verified_at', null)
-                    ->where('rejected_reason', null);
+                    ->where('is_completed', false);
 
                 return $newQuery;
             })
@@ -150,7 +148,16 @@ class VerifikasiResource extends Resource
                     ->formatStateUsing(fn(string $state): string => CarbonInterval::seconds($state)->cascade()->totalHours . ' jam'),
                 TextColumn::make('is_completed')
                     ->label('Status Gaji')
-                    ->formatStateUsing(fn(bool $state): string => $state ? 'Selesai' : 'Belum Selesai'),
+                    ->formatStateUsing(function($record) {
+                        if ($record->is_completed) {
+                            return 'Sudah Dibayarkan';
+                        } elseif ($record->verified_at) {
+                            return 'Sudah Verifikasi - Menunggu Pembayaran';
+                        } elseif ($record->rejected_at) {
+                            return 'Ditolak';
+                        }
+                        return 'Menunggu Verifikasi';
+                    }),
             ])
             ->filters([
                 SelectFilter::make('bulan')
@@ -385,7 +392,9 @@ class VerifikasiResource extends Resource
                     ->icon('heroicon-s-document-arrow-up')
                     ->iconButton()
                     ->color('danger')
-                    ->url(fn(): string => route('rincian-gaji'))
+                    ->url(fn($record): string => route('rincian-gaji', [
+                        'id' => $record?->id ? $record->id : 1,
+                    ]))
                     ->openUrlInNewTab(),
             ]);
     }

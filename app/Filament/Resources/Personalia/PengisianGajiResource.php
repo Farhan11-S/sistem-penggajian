@@ -381,7 +381,10 @@ class PengisianGajiResource extends Resource
                     ->icon('heroicon-s-document-arrow-up')
                     ->iconButton()
                     ->color('danger')
-                    ->url(fn(): string => route('rincian-gaji'))
+                    ->hidden(fn($record) => !$record->gajiKaryawan()->exists())
+                    ->url(fn($record): string => route('rincian-gaji', [
+                        'id' => $record?->id ? $record->id : 1,
+                    ]))
                     ->openUrlInNewTab(),
             ]);
     }
