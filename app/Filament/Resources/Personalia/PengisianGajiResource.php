@@ -126,9 +126,7 @@ class PengisianGajiResource extends Resource
                         'karyawan.user',
                         'gajiKaryawan',
                         'potonganGajiKaryawan',
-                    ])
-                    ->where('is_completed', false)
-                    ->orWhere(fn($query) => $query->where('verified_at', null)->where('rejected_reason', '!=', null));
+                    ]);
 
                 return $newQuery;
             })
@@ -144,7 +142,18 @@ class PengisianGajiResource extends Resource
                     ->formatStateUsing(fn(string $state): string => CarbonInterval::seconds($state)->cascade()->totalHours . ' jam'),
                 TextColumn::make('karyawan.gajiKaryawan')
                     ->label('Status')
-                    ->formatStateUsing(fn(string $state): string => $state == null ? 'Belum Diisi' : 'Sudah Diisi'),
+                    ->formatStateUsing(function ($record) {
+                        if ($record->is_completed) {
+                            return 'Sudah Dibayarkan';
+                        } elseif ($record->verified_at) {
+                            return 'Sudah Verifikasi - Menunggu Pembayaran';
+                        } elseif ($record->rejected_at) {
+                            return 'Ditolak';
+                        } elseif ($record->gajiKaryawan()->exists()) {
+                            return 'Sudah Diinput';
+                        }
+                        return 'Menunggu Verifikasi';
+                    }),
             ])
             ->filters([
                 //

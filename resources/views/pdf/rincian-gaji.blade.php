@@ -43,6 +43,14 @@
         </tr>
     </table>
     <hr style="height: 1px; background-color: black; margin: 30px 0;">
+    @php
+    $formatRupiah = function($amount) {
+    if ($amount == 0) {
+    return '-';
+    }
+    return 'Rp ' . number_format($amount, 0, ',', '.');
+    }
+    @endphp
     <table style="width: 100%;">
         <tr>
             <td style="width: 50%;">
@@ -56,17 +64,17 @@
                     <tr>
                         <td>GAJI</td>
                         <td>:</td>
-                        <td>{{ $penerimaan['gaji'] }}</td>
+                        <td>{{ $formatRupiah($penerimaan['gaji']) }}</td>
                     </tr>
                     <tr>
                         <td>SANTUNAN SOSIAL</td>
                         <td>:</td>
-                        <td>{{ $penerimaan['santunan_sosial'] }}</td>
+                        <td>{{ $formatRupiah($penerimaan['santunan_sosial']) }}</td>
                     </tr>
                     <tr>
                         <td>TUNJANGAN PEMONDOKAN</td>
                         <td>:</td>
-                        <td>{{ $penerimaan['tunjangan_pemondokan'] }}</td>
+                        <td>{{ $formatRupiah($penerimaan['tunjangan_pemondokan']) }}</td>
                     </tr>
                     <tr>
                         <td>UANG LEMBUR</td>
@@ -90,17 +98,17 @@
                         </td>
                         <td>
                             <ul style="padding: 0; margin: 0;">
-                                <li>{{ $penerimaan['uang_lembur']['biasa'] }}</li>
-                                <li>{{ $penerimaan['uang_lembur']['minggu'] }}</li>
-                                <li>{{ $penerimaan['uang_lembur']['raya'] }}</li>
-                                <li>{{ $penerimaan['uang_lembur']['raya_minggu'] }}</li>
+                                <li>{{ $formatRupiah($penerimaan['uang_lembur']['biasa']) }}</li>
+                                <li>{{ $formatRupiah($penerimaan['uang_lembur']['minggu']) }}</li>
+                                <li>{{ $formatRupiah($penerimaan['uang_lembur']['raya']) }}</li>
+                                <li>{{ $formatRupiah($penerimaan['uang_lembur']['raya_minggu']) }}</li>
                             </ul>
                         </td>
                     </tr>
                     <tr>
                         <td>JUMLAH</td>
                         <td>:</td>
-                        <td>{{ $penerimaan['jumlah'] }}</td>
+                        <td>{{ $formatRupiah($penerimaan['jumlah']) }}</td>
                     </tr>
                     <!-- <tr>
                         <td>JUMLAH PENERIMAAN</td>
@@ -123,50 +131,51 @@
                     <tr>
                         <td>IURAN PEKERJA</td>
                         <td>:</td>
-                        <td>{{ $potongan['iuran_pekerja'] }}</td>
+                        <td>{{ $formatRupiah($potongan['iuran_pekerja']) }}</td>
                     </tr>
                     <tr>
                         <td>PINJAMAN KOPERASI</td>
                         <td>:</td>
-                        <td>{{ $potongan['pinjaman_koperasi'] }}</td>
+                        <td>{{ $formatRupiah($potongan['pinjaman_koperasi']) }}</td>
                     </tr>
                     <tr>
                         <td>PINJAMAN PERUSAHAAN</td>
                         <td>:</td>
-                        <td>{{ $potongan['pinjaman_perusahaan'] }}</td>
+                        <td>{{ $formatRupiah($potongan['pinjaman_perusahaan']) }}</td>
                     </tr>
                     <tr>
                         <td>SAKIT</td>
                         <td>:</td>
-                        <td>{{ $potongan['sakit'] }}</td>
+                        <td>{{ $formatRupiah($potongan['sakit']) }}</td>
                     </tr>
                     <tr>
                         <td>ABSEN</td>
                         <td>:</td>
-                        <td>{{ $potongan['absen'] }}</td>
+                        <td>{{ $formatRupiah($potongan['absen']) }}</td>
                     </tr>
                     <tr>
                         <td>INFAQ</td>
                         <td>:</td>
-                        <td>{{ $potongan['infaq'] }}</td>
+                        <td>{{ $formatRupiah($potongan['infaq']) }}</td>
                     </tr>
                     <tr>
                         <td>PEMBULATAN BULAN INI</td>
                         <td>:</td>
-                        <td>{{ $potongan['pembulatan_bulan_ini'] }}</td>
+                        <td>{{ $formatRupiah($potongan['pembulatan_bulan_ini']) }}</td>
                     </tr>
                     <tr>
                         <td>JUMLAH POTONGAN</td>
                         <td>:</td>
-                        <td>{{ $potongan['jumlah_potongan'] }}</td>
+                        <td>{{ $formatRupiah($potongan['jumlah_potongan']) }}</td>
                     </tr>
                 </table>
             </td>
         </tr>
     </table>
-    <span style="text-transform: uppercase; margin-top: 5px;">Jumlah Penerimaan : {{ $penerimaan['jumlah'] }} - Rp.
-        {{ $potongan['jumlah_potongan'] }} =
-        {{ $penerimaan['jumlah_penerimaan'] }}</span>
+    <span style="text-transform: uppercase; margin-top: 5px; font-weight: 800;">Jumlah Penerimaan :
+        Rp {{ number_format($penerimaan['jumlah'], 0, ',', '.') }} - Rp
+        {{ number_format($potongan['jumlah_potongan'], 0, ',', '.') }} =
+        {{ $formatRupiah($penerimaan['jumlah_penerimaan']) }}</span>
     <hr style="border: 0.5px dashed black; float: none; margin: 10px 0;">
 </body>
 
