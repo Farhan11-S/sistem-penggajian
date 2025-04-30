@@ -140,7 +140,7 @@ class PengisianGajiResource extends Resource
                 TextColumn::make('karyawan.total_jam_lembur')
                     ->label('Total Jam Lembur Karyawan')
                     ->formatStateUsing(fn(string $state): string => CarbonInterval::seconds($state)->cascade()->totalHours . ' jam'),
-                TextColumn::make('karyawan.gajiKaryawan')
+                TextColumn::make('created_at')
                     ->label('Status')
                     ->formatStateUsing(function ($record) {
                         if ($record->is_completed) {
