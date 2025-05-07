@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Personalia;
 
 use App\Filament\Resources\Personalia\PenggajianResource\Pages;
 use App\Models\Karyawan;
+use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Filament\Actions\StaticAction;
 use Filament\Forms\Components\TextInput;
@@ -12,7 +13,9 @@ use Filament\Resources\Resource;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -44,7 +47,19 @@ class PenggajianResource extends Resource
                     ->formatStateUsing(fn(string $state): string => CarbonInterval::seconds($state)->cascade()->totalHours . ' jam'),
             ])
             ->filters([
-                //
+                SelectFilter::make('bulan')
+                    ->options([
+                        'April' => 'April',
+                        'May' => 'Mei',
+                    ])
+                    ->query(fn(Builder $query, $data): Builder => $query
+                        ->whereDoesntHave(
+                            'statusGaji',
+                            fn($q) => $q
+                                ->whereMonth('created_at', '=', $data['value'] ? Carbon::parse($data['value'])->month : Carbon::now()->month)
+                            // ->where('is_completed', 0)
+                        ))
+                    ->default(Carbon::now()->format('F')),
             ])
             ->actions([
                 Tables\Actions\Action::make('view')
@@ -56,8 +71,11 @@ class PenggajianResource extends Resource
                         TextInput::make('total_jam_lembur')
                             ->label('Total Jam Lembur'),
                     ])
-                    ->action(function ($record): void {
-                        $record->statusGaji()->create();
+                    ->action(function ($record, Table $table): void {
+                        $bulan = $table->getFilter('bulan')->getState()['value'];
+                        $record->statusGaji()->create([
+                            'created_at' =>  $bulan ? Carbon::parse(strtotime('first day of ' . $bulan)) : now(),
+                        ]);
                     })
                     ->label(__('personalia.penggajian.modal.label'))
                     ->modalHeading(fn($record): string => __('personalia.penggajian.modal.heading', ['label' => $record->user->name]))
@@ -102,13 +120,7 @@ class PenggajianResource extends Resource
                             END
                         )
                     )"
-                ))
-                ->whereDoesntHave(
-                    'statusGaji',
-                    fn($q) => $q
-                        ->whereDate('created_at', '>=', now()->startOfMonth())
-                    // ->where('is_completed', 0)
-                );
+                ));
 
             return $newQuery;
         });

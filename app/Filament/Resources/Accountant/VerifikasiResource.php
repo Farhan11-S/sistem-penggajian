@@ -166,8 +166,7 @@ class VerifikasiResource extends Resource
                     ->query(fn(Builder $query, $data): Builder => $query->when(
                         $data['value'],
                         fn(Builder $query, $value): Builder => $query->whereMonth('created_at', '=', Carbon::parse($value)->month)
-                    ))
-                    ->default(Carbon::now()->format('F')),
+                    )),
             ])
             ->actions([
                 Tables\Actions\Action::make('view')
